@@ -9,7 +9,7 @@
 \caption{Atraso crítico: previsão de Nyquist (tempo contínuo) e laço discreto do gêmeo digital.}
 \label{tab:hil-ts}
 \small
-\input{../results/tabelas/hil_atraso_critico.tex}
+\resizebox{\textwidth}{!}{\input{../results/tabelas/hil_atraso_critico.tex}}
 \end{table}
 
 \textbf{Simulação no Tinkercad.} A Figura~\ref{fig:tinkercad-circuito} mostra o circuito montado no Tinkercad Circuits, com os dois Arduinos ligados em cruz pela serial (TX$\to$RX), o potenciômetro que ajusta o atraso, a chave de atraso variável e o LED ``L'' da Planta, que acende quando $|r-y|>0{,}5$ após 10~s. Os ensaios foram executados pelo próprio simulador, e a série completa $y[k]$, $\tau[k]$, $u[k]$ de cada ensaio foi capturada do Monitor Serial da Planta. A Figura~\ref{fig:tinkercad-monitor} mostra a tela do simulador durante o ensaio acima do limite.

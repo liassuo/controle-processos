@@ -1,0 +1,25 @@
+% Discussão: validação empírica da tabela comparativa do enunciado (Seção 4 do projeto)
+
+O enunciado do projeto propõe uma tabela comparativa entre os quatro métodos e pede que ela seja validada empiricamente. A Tabela~\ref{tab:comparacao} retoma cada característica e indica a evidência obtida neste trabalho.
+
+\begin{table}[ht]
+\centering
+\caption{Validação empírica da tabela comparativa do enunciado.}
+\label{tab:comparacao}
+\scriptsize
+\begin{tabular}{p{2.3cm}p{2.6cm}p{8.6cm}}
+\toprule
+Característica & Afirmação do enunciado & Evidência e veredito \\
+\midrule
+Estabilidade relativa & Nyquist e Bode: sim (MG, MF); Routh: não; Lugar: sim & Confirmada. Nyquist e Bode forneceram MG, MF e margem de atraso. O Routh, sozinho, só classifica; obter a fronteira de ganho exigiu uma varredura em $K$ com bissecção (Tabela~\ref{tab:ganho}). O Lugar fornece os polos e, portanto, amortecimento e frequência natural. \\[1mm]
+Sistemas com atraso & Nyquist e Bode tratam de forma exata; Routh e Lugar exigem Padé & Confirmada. A Padé de ordem 1 errou o atraso crítico em \ErroPadeApct\% (para mais, isto é, de forma não conservadora); foram necessárias ordens $\ge 3$ para erro abaixo de $10^{-3}$, ao custo de equações características de grau maior e coeficientes com grande faixa dinâmica (Tabela~\ref{tab:robustez}). \\[1mm]
+Instável em malha aberta & Nyquist, Routh e Lugar lidam naturalmente; Bode tem interpretação complexa & Confirmada. No Sistema B, o Nyquist exigiu $N=-1$ e o Routh e o Lugar indicaram um ganho \emph{mínimo}. No Bode, o cruzamento de fase ocorre em $\omega=0$ e a MG é negativa em dB (\MGB~dB), uma leitura que só faz sentido quando se conhece $P$. \\[1mm]
+Custo computacional & Routh baixo; Nyquist e Bode moderados; Lugar alto & Confirmada, com ressalvas. O Routh custou de dezenas a centenas de $\mu$s e o Lugar, centenas de ms (o mais caro). O custo do Nyquist (menos de 1~ms) é dominado pelo número de pontos do contorno e quase não depende de $n$. O das margens depende da grade escolhida, e não do método. \\[1mm]
+Principal vantagem & Nyquist: atrasos e dados experimentais; Routh: rapidez; Lugar: efeito de $K$; Bode: projeto de compensadores & Coerente com os resultados. O Nyquist foi o único método aplicado sem modificação a todos os sistemas, inclusive com atraso exato, e previu o limite observado na montagem HIL. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Três observações complementam a tabela. A primeira é que a concordância de nove casas decimais entre os métodos, nos sistemas racionais, mostra que as diferenças práticas entre eles não estão na resposta, mas no que cada um exige como entrada e no que entrega como saída. A segunda é que o Sistema C evidencia o risco de se apoiar apenas no módulo do Diagrama de Bode: o sistema de fase não mínima e o seu gêmeo de fase mínima são indistinguíveis em $|L(j\omega)|$, mas apenas o primeiro tem ganho limitado (Seção~\ref{sec:res-sistemas}). A terceira é que a robustez numérica não é um detalhe de implementação: um critério ingênuo de ``zero numérico'' no Routh produziu até \RobAbsErro\% de vereditos errados com Padé de ordem alta, sem nenhum aviso. Isso reforça a vantagem do Nyquist, que não precisa expandir o atraso em polinômios.
+
+\textbf{Limitações.} A montagem HIL foi simulada no Tinkercad, e não em hardware físico. O atraso foi emulado por \textit{buffer}, com pacotes sempre entregues em ordem, e a perda de pacotes não foi estudada. Foi avaliado um único ajuste de PID e uma única planta de processo. O cálculo das margens usa uma grade fixa, que, em princípio, poderia deixar de detectar cruzamentos muito próximos entre si. A análise de escalabilidade foi feita em uma única máquina, com tempos de Python interpretado; implementações compiladas mudariam os valores absolutos, mas não as tendências de complexidade.

@@ -1,0 +1,294 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{subcaption}
+
+\graphicspath{{../results/figuras/}{../results/tinkercad/}{figuras/}}
+\input{../results/tabelas/numeros.tex}
+
+\sloppy
+
+\title{Análise Computacional e Comparativa de Critérios de Estabilidade em Sistemas Dinâmicos: Nyquist, Routh-Hurwitz, Lugar das Raízes e Bode}
+
+\author{Davi Valério de Oliveira\inst{1}, Luiz Iassuoo Yabagata Neto\inst{1},\\ Samuel André Lopes Furtado\inst{1}}
+
+\address{Curso de Engenharia da Computação -- \textbf{[Instituição -- a preencher]}\\
+  Disciplina de Controle de Processos -- Prof. \textbf{[nome -- a preencher]}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This paper presents a from-scratch computational tool, written in Python with NumPy only, that assesses the stability of linear time-invariant systems by the Nyquist criterion and compares it with Routh-Hurwitz, root locus and Bode analysis. The Nyquist module builds the indented D-contour, evaluates the transport delay exactly and counts encirclements of $-1$ by two independent algorithms. On four benchmark systems (stable third order, open-loop unstable magnetic levitator, non-minimum phase and networked PID loop with delay) all methods agree on the gain boundary to nine significant digits and match python-control. For the delayed loop the exact critical delay is \TauCrit~s, whereas a first-order Padé approximation errs by \ErroPadeApct\%. A two-Arduino hardware-in-the-loop setup simulated in Tinkercad reproduces the predicted behaviour.
+\end{abstract}
+
+\begin{resumo}
+  Este artigo apresenta uma ferramenta computacional, implementada do zero em Python apenas com NumPy, que avalia a estabilidade de sistemas lineares invariantes no tempo pelo critério de Nyquist e a compara com os métodos de Routh-Hurwitz, Lugar das Raízes e Diagrama de Bode. O módulo de Nyquist constrói o contorno com indentações, avalia o atraso de transporte de forma exata e conta os envoltórios de $-1$ por dois algoritmos independentes. Em quatro sistemas de teste (estável de terceira ordem, levitador magnético instável em malha aberta, fase não mínima e malha PID com atraso de rede), todos os métodos concordam na fronteira de ganho até a nona casa decimal e coincidem com a biblioteca python-control. Na malha com atraso, o atraso crítico exato é de \TauCrit~s, enquanto a aproximação de Padé de primeira ordem erra em \ErroPadeApct\%. Uma montagem \textit{hardware-in-the-loop} com dois Arduinos, simulada no Tinkercad, reproduz o comportamento previsto.
+\end{resumo}
+
+% ======================================================================
+\section{Introdução}
+
+A análise de estabilidade é etapa obrigatória no projeto de sistemas de controle, de sistemas embarcados e de laços fechados por redes de comunicação. Os critérios clássicos respondem a perguntas diferentes. O critério de Routh-Hurwitz decide, por álgebra sobre os coeficientes, se todas as raízes da equação característica estão no semiplano esquerdo, mas não informa o quanto o sistema está próximo da instabilidade. O Lugar das Raízes mostra como os polos de malha fechada se movem com o ganho, e o Diagrama de Bode e o critério de Nyquist trabalham no domínio da frequência e fornecem margens de estabilidade relativa \cite{ogata2010,nise2017}.
+
+O critério de Nyquist \cite{nyquist1932} tem duas propriedades de interesse computacional: aplica-se diretamente a plantas instáveis em malha aberta e trata o atraso de transporte $e^{-\tau s}$ sem aproximação, pois só exige avaliar a função de malha aberta sobre um contorno. Em sistemas controlados via rede, nos quais o atraso de comunicação é intrínseco \cite{zhang2001}, essa propriedade é decisiva. Os métodos que operam sobre polinômios em $s$ exigem substituir o atraso por uma função racional, tipicamente a aproximação de Padé \cite{pade1892}.
+
+Para estudantes de Engenharia da Computação, o desafio inclui a implementação: amostrar adequadamente o contorno, contar envoltórios de forma robusta, lidar com polos sobre o eixo imaginário e controlar erros de arredondamento quando a ordem cresce. Este trabalho desenvolve e avalia empiricamente essa implementação.
+
+\subsection{Objetivos}
+
+O objetivo geral é desenvolver uma ferramenta computacional para analisar a estabilidade de sistemas lineares invariantes no tempo pelo critério de Nyquist e comparar seus resultados, limitações e desempenho com Routh-Hurwitz, Lugar das Raízes e Bode. Os objetivos específicos são:
+(i) implementar o critério de Nyquist a partir do Princípio do Argumento;
+(ii) extrair automaticamente as margens de ganho e de fase;
+(iii) implementar Routh-Hurwitz, com seus casos especiais, e o Lugar das Raízes sem bibliotecas de controle;
+(iv) quantificar a vantagem do tratamento exato do atraso frente às aproximações de Padé;
+(v) medir tempo de execução e erro numérico em função da ordem do sistema; e
+(vi) aplicar o critério para prever o atraso crítico de um laço PID em uma montagem \textit{hardware-in-the-loop} (HIL) com microcontroladores.
+
+As contribuições são: o código aberto e testado; a validação empírica, sistema a sistema, da tabela comparativa proposta no enunciado do projeto; e um estudo de estabilidade numérica que documenta uma falha real de implementação do critério de Routh e sua correção.
+
+% ======================================================================
+\section{Fundamentação teórica}
+
+\subsection{Princípio do Argumento e mapeamento conforme}
+
+Seja $F(s)$ uma função racional e $\Gamma$ um contorno fechado simples no plano $s$, percorrido no sentido horário, que não passa por zeros nem polos de $F$. O Princípio do Argumento de Cauchy estabelece que a imagem $F(\Gamma)$ envolve a origem, no sentido horário,
+\begin{equation}
+  N = Z - P
+  \label{eq:argumento}
+\end{equation}
+vezes, em que $Z$ e $P$ são, respectivamente, o número de zeros e de polos de $F$ no interior de $\Gamma$. O resultado decorre da variação do argumento de $F(s)=K\prod(s-z_i)/\prod(s-p_j)$: cada fator $(s-z_i)$ com $z_i$ interno a $\Gamma$ contribui com uma volta completa de $-2\pi$, enquanto fatores com raízes externas têm variação líquida nula. Como $F$ é analítica fora de seus polos, o mapeamento é conforme (preserva ângulos) em todo ponto regular, o que garante que a curva imagem é contínua e que a contagem de voltas é bem definida \cite{astrom2008}.
+
+\subsection{Critério de estabilidade de Nyquist}
+
+Para um laço com realimentação negativa e função de malha aberta $L(s)=G(s)H(s)$, os polos de malha fechada são os zeros de $F(s)=1+L(s)$, e os polos de $F$ coincidem com os de $L$. Escolhendo $\Gamma$ como o contorno de Nyquist, que sobe pelo eixo imaginário de $-jR$ a $+jR$ e se fecha por um semicírculo de raio $R\to\infty$ no semiplano direito (SPD), a Eq.~\eqref{eq:argumento} aplicada a $F$ dá
+\begin{equation}
+  Z = N + P,
+  \label{eq:nyquist}
+\end{equation}
+em que $Z$ é o número de polos de malha fechada no SPD, $P$ o número de polos de $L$ no SPD e $N$ o número de envoltórios horários de $L(\Gamma)$ em torno do ponto crítico $-1+j0$ (pois envolver a origem com $1+L$ equivale a envolver $-1$ com $L$). A malha fechada é estável se, e somente se, $Z=0$, isto é, $N=-P$: o diagrama deve envolver $-1$ no sentido anti-horário tantas vezes quantos forem os polos instáveis de malha aberta \cite{nyquist1932,ogata2010}.
+
+Polos de $L$ sobre o eixo $j\omega$ (integradores ou pares $\pm j\omega_0$) violam a hipótese do Princípio do Argumento. O tratamento usual é desviar o contorno por semicírculos de raio $r\to 0$ pela direita, o que exclui esses polos do interior de $\Gamma$ e, portanto, da contagem de $P$. Cada desvio é mapeado em um arco de raio $\to\infty$ no plano $L$ \cite{astrom2008}.
+
+\subsection{Margens de estabilidade}
+
+A estabilidade relativa é medida pela distância de $L(j\omega)$ ao ponto crítico. Sendo $\omega_{cf}$ a frequência em que $\angle L(j\omega_{cf})=-180^\circ$ e $\omega_{cg}$ aquela em que $|L(j\omega_{cg})|=1$, definem-se a margem de ganho e a margem de fase
+\begin{equation}
+  \mathrm{MG} = \frac{1}{|L(j\omega_{cf})|}, \qquad
+  \mathrm{MF} = 180^\circ + \angle L(j\omega_{cg}).
+\end{equation}
+Um atraso adicional $\Delta\tau$ multiplica $L$ por $e^{-j\omega\Delta\tau}$, que não altera o módulo e reduz a fase em $\omega\Delta\tau$. O maior atraso tolerado, a margem de atraso, é então $\mathrm{MA}=\mathrm{MF}/\omega_{cg}$ (com MF em radianos). Para $P>0$, as margens devem ser interpretadas à luz do critério completo, pois a perda de estabilidade pode ocorrer tanto pelo aumento quanto pela redução do ganho \cite{skogestad2005}.
+
+\subsection{Sistemas com atraso de transporte}
+
+O atraso puro $e^{-\tau s}$ é transcendente, de modo que $1+L(s)=0$ passa a ter infinitas raízes. No critério de Nyquist isso não traz dificuldade: basta avaliar $e^{-j\omega\tau}$ sobre o contorno, cujo módulo é unitário no eixo e limitado por $1$ no SPD. Já os métodos baseados em polinômios exigem uma aproximação racional. A aproximação de Padé de ordem $[N/N]$ \cite{pade1892} é
+\begin{equation}
+  e^{-\tau s} \approx \frac{\sum_{k=0}^{N} c_k(-\tau s)^k}{\sum_{k=0}^{N} c_k(\tau s)^k},
+  \qquad c_k=\frac{(2N-k)!\,N!}{(2N)!\,k!\,(N-k)!}.
+  \label{eq:pade}
+\end{equation}
+Ela é um passa-tudo exato em módulo, mas seu erro de fase cresce com $\omega\tau$; além disso, introduz $N$ zeros no SPD e eleva o grau da equação característica em $N$.
+
+\subsection{Métodos alternativos}
+
+\textbf{Routh-Hurwitz.} Para $a_n s^n+\cdots+a_0$, a tabela de Routh é construída a partir das duas primeiras linhas (coeficientes alternados) pela recorrência $b_j=(b_0a_{j+1}-a_0b_{j+1})/b_0$, e o número de raízes no SPD é igual ao número de trocas de sinal da primeira coluna \cite{routh1877,hurwitz1895}. Há dois casos especiais: um zero na primeira coluna de uma linha não nula, tratado substituindo-o por $\varepsilon\to 0^+$; e uma linha inteiramente nula, que indica raízes simétricas em relação à origem e é tratada substituindo-a pelos coeficientes da derivada do polinômio auxiliar formado pela linha anterior \cite{nise2017}.
+
+\textbf{Lugar das Raízes.} Para $L(s)=KN(s)/D(s)$, o lugar é o conjunto das raízes de $D(s)+KN(s)=0$ com $K\in[0,\infty)$ \cite{evans1948}. As regras de construção fornecem o centroide das assíntotas, $\sigma_a=(\sum p_i-\sum z_i)/(n-m)$, seus ângulos, $(2k+1)180^\circ/(n-m)$, e os pontos de separação, que são raízes reais de $N D' - N' D = 0$ com $K>0$.
+
+\textbf{Diagrama de Bode.} Representa $20\log_{10}|L(j\omega)|$ e $\angle L(j\omega)$ em escala logarítmica de frequência \cite{bode1945}. A aproximação assintótica usa retas de $\pm 20$~dB/década por raiz real e $\pm 40$~dB/década por par complexo a partir das frequências de quebra; o atraso contribui apenas com $-\omega\tau$ na fase.
+
+% ======================================================================
+\section{Metodologia e arquitetura computacional}
+
+\subsection{Arquitetura}
+
+A ferramenta é um pacote Python (\texttt{src/estabilidade}) organizado em módulos independentes: polinômios (Horner, derivada e produto), raízes, função de transferência, Nyquist, margens, Bode, Padé, Routh-Hurwitz, Lugar das Raízes, simulação no tempo e gêmeo digital do HIL. Conforme exigido, nenhum algoritmo de controle é delegado a bibliotecas prontas: o NumPy \cite{harris2020} é usado para vetores, aritmética complexa e autovalores. As bibliotecas python-control \cite{fuller2021} e SciPy \cite{virtanen2020} aparecem apenas na suíte de testes e nos scripts de validação cruzada. Todos os números, tabelas e figuras deste artigo são gerados por scripts em \texttt{experimentos/} e incluídos no texto sem transcrição manual. O código-fonte, a suíte de testes e as instruções de reprodução estão no repositório do projeto\footnote{\url{https://github.com/liassuo/controle-processos}}.
+
+O tipo central é \texttt{FT(num, den, atraso)}, que representa $L(s)=N(s)/D(s)\cdot e^{-\tau s}$ e é avaliado pelo método de Horner, com o termo exponencial calculado diretamente. Os métodos no plano $s$ recusam explicitamente funções com atraso e exigem a conversão prévia por Padé, o que torna a assimetria entre os métodos visível no próprio código.
+
+\subsection{Algoritmos}
+
+\textbf{Contorno e envoltórios.} Os polos de $L$ são classificados em SPD, SPE e eixo imaginário. O raio $R$ do semicírculo externo é escolhido por uma cota sobre o módulo das raízes, $|L(s)|\le |b_m/a_n|\prod(R+|z_i|)/\prod(R-|p_j|) < 1/2$, que também vale com atraso porque $|e^{-\tau s}|\le 1$ no SPD. Onde $|L|<1/2$, o ponto $L+1$ permanece no semiplano $\mathrm{Re}>0$ e não contribui com voltas, o que justifica truncar o refinamento em altas frequências. O ramo $\omega>0$ é amostrado em escala logarítmica e refinado por bissecção sempre que a variação do ângulo de $L+1$ entre amostras vizinhas excede $15^\circ$; com atraso, impõe-se ainda $\Delta\omega\,\tau\le 0{,}2$ rad, pois o diagrama espirala. O ramo $\omega<0$ é obtido por simetria conjugada, e os polos no eixo recebem semicírculos de raio $10^{-4}$. O número de voltas é calculado de duas formas independentes: pela soma dos ângulos $\sum \arg[(L_{k+1}+1)/(L_k+1)]/2\pi$ e pela contagem de cruzamentos com sinal de uma semirreta horizontal a partir de $-1$, que tem custo $O(n)$ e não depende de funções trigonométricas \cite{hormann2001}. A implementação exige que as duas contagens coincidam.
+
+\textbf{Margens.} Os cruzamentos de ganho e de fase são isolados em uma grade logarítmica de $2\times 10^5$ pontos entre $10^{-4}$ e $10^4$~rad/s e refinados por bissecção. A fase é desdobrada continuamente na parte racional e acrescida exatamente de $-\omega\tau$. O caso $\omega_{cf}=0$, típico de $P>0$, é tratado à parte.
+
+\textbf{Routh-Hurwitz.} Antes da tabela, o polinômio é escalonado em frequência ($s\to\alpha s$, com $\alpha=|a_0/a_n|^{1/n}$), o que preserva o sinal da parte real das raízes. Um elemento é considerado nulo quando é desprezível diante dos termos que o geraram, $|b_j|\le 64\,n\,u\,(|b_0a_{j+1}|+|a_0b_{j+1}|)/|b_0|$, em que $u$ é o épsilon de máquina. A Seção~\ref{sec:robustez} mostra por que esse critério relativo ao cancelamento é necessário.
+
+\textbf{Raízes.} São implementados dois métodos: os autovalores da matriz companheira, $O(n^3)$, princípio também usado por \texttt{numpy.roots} \cite{edelman1995}; e a iteração simultânea de Aberth-Ehrlich, $O(n^2)$ por iteração, programada do zero com estimativas iniciais pela cota de Fujiwara e parada por erro regressivo, isto é, quando $|p(z)|\le u\sum|a_k||z|^k$.
+
+\textbf{Lugar das Raízes.} O ganho $K$ é varrido com passo adaptativo, que é reduzido quando alguma raiz se desloca mais que 2\% da escala do problema; os ramos são mantidos contínuos por emparelhamento com o vizinho mais próximo. Os cruzamentos do eixo $j\omega$ são refinados por bissecção sobre a maior parte real.
+
+\subsection{Sistemas de teste}
+
+A Tabela~\ref{tab:sistemas} resume os quatro sistemas, definidos em \texttt{sistemas.py}. O Sistema B usa o modelo linearizado do levitador magnético, $m\ddot{x}=mg-c\,i^2/x^2$, que em torno de $(x_0,i_0)$ resulta em $G(s)=(2g/i_0)/(s^2-2g/x_0)$, com polos em $\pm\sqrt{2g/x_0}$. Os parâmetros foram escolhidos de modo que o polo instável fique em $20$~rad/s ($x_0=2g/400\approx 4{,}9$~cm, $i_0=1$~A). O Sistema D é o mesmo laço usado na montagem HIL: um PID com derivada filtrada, $C(s)=K_p+K_i/s+K_ds/(T_fs+1)$, com $K_p=2$, $K_i=1$, $K_d=0{,}5$ e $T_f=0{,}1$~s, sobre um processo de segunda ordem, com atraso nominal de rede $\tau=0{,}5$~s.
+
+\begin{table}[ht]
+\centering
+\caption{Sistemas de teste (realimentação negativa unitária).}
+\label{tab:sistemas}
+\small
+\begin{tabular}{lll}
+\toprule
+Sistema & $L(s)$ & Característica \\
+\midrule
+A & $\dfrac{20}{(s+1)(s+2)(s+3)}$ & estável em malha aberta, 3ª ordem \\[2mm]
+B & $\dfrac{400(s+10)}{s+100}\cdot\dfrac{19{,}62}{s^2-400}$ & levitador instável ($P=1$) com avanço de fase \\[2mm]
+C & $\dfrac{7(1-s)}{(s+1)(s+2)(s+3)}$ & fase não mínima (zero em $s=+1$) \\[2mm]
+D & $C_{PID}(s)\,\dfrac{1}{(s+1)(0{,}5s+1)}\,e^{-0{,}5s}$ & atraso de transporte (rede) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protocolo de validação e de desempenho}
+
+A correção é verificada em três níveis. O primeiro são 74 testes unitários com resultados analíticos conhecidos, como o ganho crítico de $60$ do Sistema A, o limite $\tau_{crit}=2\pi/(3\sqrt{3})$ para $2e^{-\tau s}/(s+1)$, os casos especiais clássicos de Routh e os polinômios de Padé de alta ordem. O segundo é a validação cruzada das margens, dos envoltórios, dos polos de malha fechada e dos polinômios de Padé com o python-control (versão \VerControl) e da resposta em frequência com o SciPy (versão \VerScipy). O terceiro é a simulação temporal independente, por Runge-Kutta de quarta ordem com atraso, que confirma cada veredito de estabilidade.
+
+Para a escalabilidade, foram usadas duas famílias de polinômios com raízes conhecidas e semente fixa: raízes estáveis aleatórias com $\mathrm{Re}\in[-10;-0{,}1]$ e a família de Wilkinson, com raízes $-1,-2,\dots,-n$, conhecida por seu mau condicionamento \cite{wilkinson1984}. Mediu-se o tempo mediano de 7 repetições para $n$ de 2 a 30, com destaque para $n=5$, $10$ e $20$, conforme o enunciado, em Python \VerPython\ e NumPy \VerNumpy\ (processador \CPU).
+
+\subsection{Montagem \textit{hardware-in-the-loop} no Tinkercad}
+\label{sec:met-hil}
+
+Na trilha de Engenharia da Computação, o laço do Sistema D foi implementado em dois Arduinos Uno simulados no Tinkercad Circuits. O Arduino ``Planta'' atua como relógio mestre ($T_s=20$~ms): integra a planta discretizada por segurador de ordem zero (ZOH) e emula a rede com um \textit{buffer} circular. O atraso é ajustado por um potenciômetro, que define $d$ amostras e, portanto, $\tau=d\,T_s$, e uma chave deslizante ativa um atraso variável sorteado em $[d,d+20]$. Os comandos são entregues em ordem, sem reordenação de pacotes. O Arduino ``Controlador'' executa o PID discretizado por Euler para trás, com saturação em $\pm 10$ e \textit{antiwindup} condicional. As placas trocam mensagens de texto pela serial de hardware a 115\,200~bit/s. Um gêmeo digital em Python reproduz o mesmo algoritmo, em ponto flutuante de 32 bits, e um teste automatizado garante que as constantes dos \textit{sketches} coincidem com as do gêmeo.
+
+% ======================================================================
+\section{Resultados}
+
+\subsection{Análise dos quatro sistemas}
+\label{sec:res-sistemas}
+
+A Tabela~\ref{tab:resultados} e a Figura~\ref{fig:nyquist} resumem a análise. Em todos os casos, as duas contagens de envoltórios coincidiram e o veredito de Nyquist ($Z=0$) concordou com o número de raízes no SPD dado pelo Routh, que no Sistema D foi aplicado sobre a aproximação de Padé de ordem 3, e com a simulação temporal.
+
+\begin{table}[ht]
+\centering
+\caption{Resultados por sistema: Nyquist ($P$, $N$, $Z$), margens (frequências em rad/s), número de raízes no SPD pelo Routh e veredito da simulação temporal.}
+\label{tab:resultados}
+\small
+\input{../results/tabelas/resultados_sistemas.tex}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.92\textwidth]{nyquist_sistemas.pdf}
+\caption{Diagramas de Nyquist calculados pela ferramenta. As setas indicam $\omega$ crescente e a cruz marca $-1+j0$. No Sistema B ($P=1$), o diagrama envolve $-1$ uma vez no sentido anti-horário ($N=-1$), logo $Z=0$.}
+\label{fig:nyquist}
+\end{figure}
+
+O \textbf{Sistema A} é o caso de referência: com MG de \MGA~dB, o ganho pode ser multiplicado por \MGlinA\ antes da instabilidade, o que corresponde a $K_{crit}=\KcritA$, exatamente o valor analítico. O \textbf{Sistema B} ilustra o caso $P>0$: a estabilidade exige que o diagrama envolva $-1$ no sentido anti-horário, e a margem de ganho é \emph{negativa} em dB (\MGB~dB). Isso significa que a malha se torna instável se o ganho for \emph{reduzido} abaixo de $K_{min}=\KminB$, interpretação que o Diagrama de Bode isolado não fornece. O \textbf{Sistema C} tem o mesmo módulo $|L(j\omega)|$ que o seu gêmeo de fase mínima $7(1+s)/[(s+1)(s+2)(s+3)]$, mas o zero no SPD acrescenta atraso de fase e limita o ganho a $\KcritC$, enquanto o gêmeo de fase mínima é estável para qualquer $K>0$. O \textbf{Sistema D} tem MF de \MFD$^\circ$ e margem de atraso de \MAD~s, isto é, tolera um atraso total de $0{,}5+\MAD=\TauCrit$~s.
+
+As Figuras~\ref{fig:bode} e~\ref{fig:lugar} mostram os diagramas de Bode (exato e assintótico) e o Lugar das Raízes. A Tabela~\ref{tab:ganho} compara a fronteira de estabilidade em $K$, normalizada pelo ganho nominal, obtida independentemente por Routh (bissecção sobre o veredito da tabela), pelo Lugar das Raízes (cruzamento do eixo $j\omega$) e pela margem de ganho de Nyquist/Bode. Nos sistemas racionais, os três métodos concordam até a nona casa decimal. No Sistema D, a pequena diferença entre Routh/Lugar e Nyquist é o erro da aproximação de Padé de ordem~3, e não do método.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{bode_sistemas.pdf}
+\caption{Diagramas de Bode exatos (linha contínua) e aproximações assintóticas (tracejado). No Sistema D, a fase decresce sem limite por causa de $-\omega\tau$.}
+\label{fig:bode}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{lugar_raizes_sistemas.pdf}
+\caption{Lugar das Raízes ($\times$: polos; $\circ$: zeros; quadrados: polos de malha fechada no ganho nominal). Para o Sistema D, o lugar foi traçado sobre a aproximação de Padé de ordem 3, cujos zeros no SPD são visíveis.}
+\label{fig:lugar}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\caption{Fronteira de estabilidade em $K$ (múltiplo do ganho nominal) por método.}
+\label{tab:ganho}
+\small
+\input{../results/tabelas/ganho_critico_metodos.tex}
+\end{table}
+
+\subsection{Validação cruzada}
+
+A Tabela~\ref{tab:validacao} confronta os resultados próprios com o python-control. As margens coincidem até a quarta casa decimal mostrada, o número de envoltórios é idêntico e os polos de malha fechada diferem em no máximo $10^{-13}$. Para o Sistema D, a biblioteca não aceita atraso exato na função \texttt{margin}, de modo que a margem de fase de referência foi obtida descontando $\omega_{cg}\tau$ da margem do sistema sem atraso, o que é exato porque o atraso não altera o módulo.
+
+\begin{table}[ht]
+\centering
+\caption{Validação cruzada com python-control.}
+\label{tab:validacao}
+\scriptsize
+\input{../results/tabelas/validacao_cruzada.tex}
+\end{table}
+
+\subsection{Atraso exato versus aproximação de Padé}
+
+O atraso crítico do Sistema D foi obtido de duas formas pelo tratamento exato: pela margem de atraso (\TauCrit~s) e por bissecção sobre o veredito $Z$ do Nyquist (\TauCritBis~s). Em seguida, substituiu-se $e^{-\tau s}$ por Padé de ordem $N$ e buscou-se o $\tau$ crítico por bissecção sobre o veredito de Routh e, independentemente, sobre as raízes da equação característica (Tabela~\ref{tab:pade}). A aproximação de primeira ordem superestima o atraso tolerável em \ErroPadeApct\%, um erro perigoso porque está do lado não conservador. O erro cai para $\ErroPadeB$ com $N=2$ e para $\ErroPadeC$ com $N=3$; a partir de $N=6$, a diferença fica abaixo da tolerância da bissecção (Figura~\ref{fig:pade}).
+
+\begin{table}[ht]
+\centering
+\caption{Atraso crítico do Sistema D com aproximações de Padé (valor exato: \TauCrit~s).}
+\label{tab:pade}
+\small
+\input{../results/tabelas/pade_atraso_critico.tex}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{pade_erro.pdf}
+\caption{Esquerda: erro de fase de Padé em função de $\omega\tau$ (a linha pontilhada marca $\omega_{cg}\tau_{crit}$). Direita: erro relativo no atraso crítico em função da ordem.}
+\label{fig:pade}
+\end{figure}
+
+O custo dessa precisão é estrutural: cada ordem de Padé acrescenta um grau à equação característica e $N$ zeros ao SPD, e a faixa dinâmica dos coeficientes cresce rapidamente, chegando a $\FaixaDinMax$ para $N=20$, o que afeta diretamente a estabilidade numérica dos métodos algébricos.
+
+\subsection{Estabilidade numérica do critério de Routh}
+\label{sec:robustez}
+
+A primeira versão da tabela de Routh considerava nulo qualquer elemento com $|b_j|\le 10^{-12}\max|a_k|$. Ao repetir o estudo de Padé para ordens altas, o Routh passou a acusar instabilidade em casos estáveis, em desacordo com as raízes. A causa é que, com coeficientes espalhados por dezenas de ordens de grandeza, elementos legítimos, mas pequenos, eram confundidos com zeros e substituídos por $\varepsilon$, o que alterava o sinal da primeira coluna. A Tabela~\ref{tab:robustez} quantifica o efeito sobre 300 valores de $\tau$ por ordem: com a tolerância absoluta e sem escalonamento, a concordância com as raízes cai para \RobAbsMin\%. Tanto o escalonamento de frequência quanto o critério relativo ao cancelamento, isoladamente, restauram 100\% de concordância até $N=20$ (grau 44); a versão final usa os dois.
+
+\begin{table}[ht]
+\centering
+\caption{Concordância (\%) entre o veredito de Routh e o das raízes, por critério de zero numérico e uso de escalonamento (300 valores de $\tau$ por ordem $N$).}
+\label{tab:robustez}
+\small
+\input{../results/tabelas/routh_robustez.tex}
+\end{table}
+
+\subsection{Escalabilidade e custo computacional}
+
+A Tabela~\ref{tab:escala} e a Figura~\ref{fig:escala} resumem o desempenho. O Routh, com custo $O(n^2)$ em Python puro, leva de \TRouthAlCinco~$\mu$s ($n=5$) a \TRouthAlDoisZero~$\mu$s ($n=20$). As raízes pela matriz companheira são mais rápidas em tempo absoluto, apesar do custo $O(n^3)$, porque o cálculo é delegado ao LAPACK compilado, enquanto o Aberth, $O(n^2)$ por iteração em Python vetorizado, fica entre \TAbAlCinco\ e \TAbAlDoisZero~$\mu$s. O Nyquist completo custa menos de 1~ms e é quase independente de $n$, porque o custo é dominado pelo número de pontos do contorno, e não pela ordem. O cálculo de margens é o mais caro dentre os métodos de frequência (dezenas de milissegundos) apenas pela grade densa adotada, e o Lugar das Raízes é o mais caro de todos (centenas de milissegundos), por resolver um problema de raízes a cada passo de $K$.
+
+\begin{table}[ht]
+\centering
+\caption{Tempo mediano e erro relativo máximo das raízes para $n=5$, $10$ e $20$.}
+\label{tab:escala}
+\scriptsize
+\input{../results/tabelas/escalabilidade.tex}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{escalabilidade.pdf}
+\caption{Esquerda: tempo mediano por método. Direita: erro relativo máximo das raízes calculadas.}
+\label{fig:escala}
+\end{figure}
+
+O erro numérico mostra a limitação central dos métodos baseados em raízes. Para a família de Wilkinson, o erro relativo máximo das raízes cresce de $\ErroCompWiCinco$ ($n=5$) para $\ErroCompWiDoisZero$ ($n=20$) com a matriz companheira e de forma semelhante com o Aberth. Isso confirma que a perda de precisão é inerente ao condicionamento do problema, isto é, à sensibilidade das raízes aos coeficientes, e não ao algoritmo \cite{wilkinson1984}. Mesmo assim, o veredito de estabilidade do Routh permaneceu correto em todos os casos testados, pois depende apenas de sinais, e não da localização precisa das raízes.
+
+\subsection{Aplicação: previsão do atraso crítico e montagem HIL}
+\label{sec:res-hil}
+
+\input{secao_hil.tex}
+
+% ======================================================================
+\section{Discussão}
+
+\input{secao_discussao.tex}
+
+% ======================================================================
+\section{Conclusão}
+
+\input{secao_conclusao.tex}
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}

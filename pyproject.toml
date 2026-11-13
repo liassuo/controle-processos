@@ -1,0 +1,13 @@
+[project]
+name = "estabilidade"
+version = "0.1.0"
+description = "Análise computacional e comparativa de critérios de estabilidade (Nyquist, Routh-Hurwitz, Lugar das Raízes, Bode)"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "matplotlib>=3.7"]
+
+[project.optional-dependencies]
+validacao = ["control>=0.10", "scipy>=1.10", "pytest>=7"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

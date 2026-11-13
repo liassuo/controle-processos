@@ -1,0 +1,295 @@
+{
+  "tau_crit_margem": 1.1219823821685104,
+  "tau_crit_bissecao_nyquist": 1.1219826936721802,
+  "tempo_bissecao_nyquist_s": 0.04429800000002615,
+  "w_cg": 1.3972181700336197,
+  "mf_sem_atraso": 89.81996772426413,
+  "pade": [
+    {
+      "N": 1,
+      "tau": 1.4269250024437201,
+      "tau_raizes": 1.4269250024437201,
+      "erro_rel": 0.2717891342338479,
+      "tempo_s": 0.003679499999861946,
+      "grau_eq_caracteristica": 5
+    },
+    {
+      "N": 2,
+      "tau": 1.1303322253950174,
+      "tau_raizes": 1.1303322253950174,
+      "erro_rel": 0.007442044865596598,
+      "tempo_s": 0.003976500000135275,
+      "grau_eq_caracteristica": 6
+    },
+    {
+      "N": 3,
+      "tau": 1.1221324375072728,
+      "tau_raizes": 1.1221324375072728,
+      "erro_rel": 0.00013374126113488029,
+      "tempo_s": 0.004218099999889091,
+      "grau_eq_caracteristica": 7
+    },
+    {
+      "N": 4,
+      "tau": 1.1219838807889024,
+      "tau_raizes": 1.1219838807889024,
+      "erro_rel": 1.3356897718017246e-06,
+      "tempo_s": 0.00450090000003911,
+      "grau_eq_caracteristica": 8
+    },
+    {
+      "N": 5,
+      "tau": 1.1219823914022413,
+      "tau_raizes": 1.1219823914022413,
+      "erro_rel": 8.229835902739644e-09,
+      "tempo_s": 0.005835700000034194,
+      "grau_eq_caracteristica": 9
+    },
+    {
+      "N": 6,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.005051499999808584,
+      "grau_eq_caracteristica": 10
+    },
+    {
+      "N": 7,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.006284100000129911,
+      "grau_eq_caracteristica": 11
+    },
+    {
+      "N": 8,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.005862699999852339,
+      "grau_eq_caracteristica": 12
+    },
+    {
+      "N": 9,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.006122799999957351,
+      "grau_eq_caracteristica": 13
+    },
+    {
+      "N": 10,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.006652600000052189,
+      "grau_eq_caracteristica": 14
+    },
+    {
+      "N": 11,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.007078800000044794,
+      "grau_eq_caracteristica": 15
+    },
+    {
+      "N": 12,
+      "tau": 1.1219823823248727,
+      "tau_raizes": 1.1219823823248727,
+      "erro_rel": 1.3936248818253595e-10,
+      "tempo_s": 0.0073130000000674045,
+      "grau_eq_caracteristica": 16
+    }
+  ],
+  "margens_nominal": {
+    "exato": {
+      "mg_db": 5.751625158729231,
+      "mf": 49.79261562330481,
+      "w_cf": 2.70787410475911
+    },
+    "pade1": {
+      "mg_db": 6.947609722866348,
+      "mf": 51.310887163843745,
+      "w_cf": 3.070455916851623
+    },
+    "pade2": {
+      "mg_db": 5.783215942795042,
+      "mf": 49.805473550583145,
+      "w_cf": 2.7169848533806373
+    },
+    "pade3": {
+      "mg_db": 5.752050214204733,
+      "mf": 49.79266091669146,
+      "w_cf": 2.707996527505024
+    },
+    "pade5": {
+      "mg_db": 5.751625173458578,
+      "mf": 49.792615623413724,
+      "w_cf": 2.7078741090013185
+    }
+  },
+  "robustez_routh": [
+    {
+      "N": 1,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 1.0,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 228.0
+    },
+    {
+      "N": 2,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 1.0,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 2736.0
+    },
+    {
+      "N": 3,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 1.0,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 54720.0
+    },
+    {
+      "N": 4,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 1.0,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 1532159.9999999998
+    },
+    {
+      "N": 5,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 1.0,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 55157759.99999999
+    },
+    {
+      "N": 6,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.9966666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 2426941440.0
+    },
+    {
+      "N": 7,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.98,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 126200954880.0
+    },
+    {
+      "N": 8,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.9466666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 7572057292800.0
+    },
+    {
+      "N": 9,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.8933333333333333,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 514899895910399.94
+    },
+    {
+      "N": 10,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.82,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.91323920891904e+16
+    },
+    {
+      "N": 11,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.72,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.2871209354919936e+18
+    },
+    {
+      "N": 12,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.024151260652634e+20
+    },
+    {
+      "N": 13,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.0241512606526345e+22
+    },
+    {
+      "N": 14,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.266083361504845e+24
+    },
+    {
+      "N": 15,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 3.788656699345619e+26
+    },
+    {
+      "N": 16,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 4.697934307188568e+28
+    },
+    {
+      "N": 17,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 6.20127328548891e+30
+    },
+    {
+      "N": 18,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 8.681782599684475e+32
+    },
+    {
+      "N": 19,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 1.2849038247533023e+35
+    },
+    {
+      "N": 20,
+      "concordancia_escalonado": 1.0,
+      "concordancia_sem_escalonar": 1.0,
+      "concordancia_absoluta": 0.6266666666666667,
+      "concordancia_absoluta_escalonada": 1.0,
+      "faixa_dinamica_coef_tau05": 2.0044499666151519e+37
+    }
+  ],
+  "tolerancia_bissecao_s": 1e-09
+}

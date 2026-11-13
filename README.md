@@ -13,7 +13,8 @@ A ferramenta, escrita em Python, analisa a estabilidade de sistemas lineares inv
 | `experimentos/` | Scripts que geram **todas** as figuras e tabelas do artigo |
 | `results/` | Saídas: `figuras/` (PDF e PNG), `tabelas/` (LaTeX e CSV), `*.json` (dados brutos e ambiente) e `tinkercad/` (ensaios do grupo) |
 | `hil/` | Sketches dos dois Arduinos e guia de montagem no Tinkercad |
-| `report/` | Artigo no formato SBC (LaTeX) e referências (`referencias.bib`) |
+| `report/` | Artigo no formato SBC: fonte LaTeX, `artigo.pdf` compilado e referências |
+| `presentation/` | Slides do seminário (`Apresentacao_Nyquist.pptx` e `.pdf`), gerados por `construir.py` a partir dos mesmos resultados |
 | `docs/` | Enunciado, modelo de referência e levantamento bibliográfico |
 
 ## Reprodução

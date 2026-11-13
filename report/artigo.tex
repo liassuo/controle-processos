@@ -8,6 +8,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{subcaption}
+\usepackage[section]{placeins} % figuras e tabelas não atravessam seções
 
 \graphicspath{{../results/figuras/}{../results/tinkercad/}{figuras/}}
 \input{../results/tabelas/numeros.tex}
@@ -289,6 +290,7 @@ O erro numérico mostra a limitação central dos métodos baseados em raízes. 
 
 \input{secao_conclusao.tex}
 
+\FloatBarrier
 \bibliographystyle{sbc}
 \bibliography{referencias}
 

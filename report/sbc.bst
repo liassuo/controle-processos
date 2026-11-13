@@ -1,3 +1,4 @@
+% Cópia local do sbc.bst (SBC) com termos em português: ed., p., v., de, e.
 %% copy of "apalike" for SBC (no comma before year in citation label)
 
 % BibTeX `apalike' bibliography style (24-Jan-88 version)
@@ -220,7 +221,7 @@ FUNCTION {format.names}
 	      if$
 	      t "others" =
 		{ " et~al." * }
-		{ " and " * t * }
+		{ " e " * t * }
 	      if$
 	    }
 	  if$
@@ -313,10 +314,10 @@ FUNCTION {either.or.check}
 FUNCTION {format.bvolume}
 { volume empty$
     { "" }
-    { "volume" volume tie.or.space.connect
+    { "v." volume tie.or.space.connect
       series empty$
 	'skip$
-	{ " of " * series emphasize * }
+	{ " de " * series emphasize * }
       if$
       "volume and number" number either.or.check
     }
@@ -347,8 +348,8 @@ FUNCTION {format.edition}
 { edition empty$
     { "" }
     { output.state mid.sentence =
-	{ edition "l" change.case$ " edition" * }
-	{ edition "t" change.case$ " edition" * }
+	{ edition "l" change.case$ ". ed." * }
+	{ edition "t" change.case$ ". ed." * }
       if$
     }
   if$
@@ -380,8 +381,8 @@ FUNCTION {format.pages}
 { pages empty$
     { "" }
     { pages multi.page.check
-	{ "pages" pages n.dashify tie.or.space.connect }
-	{ "page" pages tie.or.space.connect }
+	{ "p." pages n.dashify tie.or.space.connect }
+	{ "p." pages tie.or.space.connect }
       if$
     }
   if$
@@ -846,7 +847,7 @@ FUNCTION {format.lab.names}
 	'skip$
 	{ s #2 "{ff }{vv }{ll}{ jj}" format.name$ "others" =
 	    { " et~al." * }
-	    { " and " * s #2 "{vv~}{ll}" format.name$ * }
+	    { " e " * s #2 "{vv~}{ll}" format.name$ * }
 	  if$
 	}
       if$
